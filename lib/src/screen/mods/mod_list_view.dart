@@ -1,116 +1,137 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:modmopet/src/screen/mods/mod_list_provider.dart';
-import 'package:modmopet/src/service/routine.dart';
-import 'package:modmopet/src/widgets/cached_banner_image.dart';
+import 'package:modmopet/src/entity/mod.dart';
+import 'package:modmopet/src/screen/mods/mod_list_item.dart';
+import 'package:modmopet/src/themes/color_schemes.g.dart';
+import 'package:modmopet/src/widgets/mm_loading_indicator.dart';
 
-import '../settings/settings_view.dart';
-import '../../entity/mod.dart';
-
-/// Displays a list of available mods for the game
-class ModListView extends HookConsumerWidget {
-  static const routeName = '/mod_list';
-  const ModListView({super.key});
+class ModListView extends ConsumerWidget {
+  final Category category;
+  const ModListView({
+    required this.category,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mods = ref.watch(modsProvider);
-    final game = ref.watch(gameProvider);
-    AppRoutineService.instance.checkForUpdate(game, game.sources.first);
-
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(game.title),
-          flexibleSpace: game.bannerUrl != null ? CachedBannerImage(game.bannerUrl!) : Container(),
-          bottom: const TabBar(
-            tabs: [
-              Tab(
-                text: 'Mods',
-                icon: Icon(Icons.extension),
-              ),
-              Tab(
-                text: 'Cheats',
-                icon: Icon(Icons.games_rounded),
-              ),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            Container(
-              child: mods.when(
-                loading: () => const SizedBox(
-                  width: 100.0,
-                  height: 100.0,
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-                error: (err, stack) => Text(err.toString()),
-                data: (mods) {
-                  return buildListView(mods);
-                },
-              ),
-            ),
-            const Text('no data.')
-          ],
-        ),
+    final modsByCategory = ref.watch(modsProvider(category));
+    return ExpansionTile(
+      title: Text(
+        category.name,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 18.0, fontWeight: FontWeight.bold),
       ),
+      leading: Column(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          category.icon,
+          Text(modsByCategory.valueOrNull != null ? modsByCategory.valueOrNull!.length.toString() : ''),
+        ],
+      ),
+      textColor: MMColors.instance.lightWhite,
+      subtitle: Text(category.description),
+      iconColor: MMColors.instance.lightWhite,
+      collapsedIconColor: MMColors.instance.primary,
+      shape: Border(
+        bottom: BorderSide(width: 2.0, color: MMColors.instance.primary),
+      ),
+      collapsedShape: Border(
+        bottom: BorderSide(width: 2.0, color: MMColors.instance.primary),
+      ),
+      childrenPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+      tilePadding: const EdgeInsets.symmetric(
+        horizontal: 22.0,
+        vertical: 10.0,
+      ),
+      initiallyExpanded: true,
+      children: [
+        modsByCategory.when(
+          skipLoadingOnRefresh: false,
+          skipLoadingOnReload: true,
+          data: (mods) => createListView(context, mods),
+          error: (e, _) => Text(e.toString()),
+          loading: () => MMLoadingIndicator(),
+        ),
+      ],
     );
   }
 
-  Widget buildListView(List<Mod> mods) {
-    return ListView.builder(
-      restorationId: 'modListView',
-      itemCount: mods.length,
-      itemBuilder: (BuildContext context, int index) {
-        final Mod mod = mods[index];
-        return ListTile(
-          title: Text(mod.title),
-          shape: const BorderDirectional(
-            bottom: BorderSide(width: 1.0),
-          ),
-          leading: Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: const [
-              Icon(
-                Icons.color_lens,
-                size: 25.0,
-              ),
-              SizedBox(width: 8.0),
-              Icon(
-                Icons.circle,
-                color: Colors.white60,
-                size: 10.0,
-              ),
-            ],
-          ),
-          subtitle: mod.subtitle != null ? Text(mod.subtitle!) : const Text('Some subtitle'),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  mod.author?['name'] != null ? Text('by ${mod.author?['name']}') : const Text('by unknown'),
-                  Text('v${mod.version}'),
-                ],
-              ),
-              const SizedBox(width: 8.0),
-              const ElevatedButton(
-                onPressed: null,
-                child: Text('Activate'),
-              ),
-              const SizedBox(width: 8.0),
-            ],
-          ),
-        );
-      },
+  Widget createListView(BuildContext context, List<Mod> mods) {
+    final availableMods = mods.where((mod) => mod.isInstalled == false).toList();
+    final installedMods = mods.where((mod) => mod.isInstalled == true).toList();
+    return Column(
+      children: [
+        ...buildModList(context, 'Installed mods', Icons.check_circle_outline, installedMods),
+        ...buildModList(context, 'Available mods', Icons.download_for_offline_outlined, availableMods),
+      ],
     );
+  }
+
+  List<Widget> buildModList(BuildContext context, String title, IconData icon, List<Mod> mods) {
+    if (mods.isNotEmpty) {
+      return [
+        Container(
+          padding: const EdgeInsets.only(top: 10.0),
+          margin: const EdgeInsets.only(bottom: 45.0),
+          decoration: const BoxDecoration(
+            border: Border(
+              left: BorderSide(color: Colors.black87, width: 1.0),
+              top: BorderSide(color: Colors.black87, width: 0.7),
+              right: BorderSide(color: Colors.black87, width: 1.0),
+              bottom: BorderSide(color: Colors.black87, width: 1.2),
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black26,
+                Colors.black38,
+              ],
+            ),
+          ),
+          child: Column(
+            children: [
+              Container(
+                alignment: Alignment.centerLeft,
+                height: 50.0,
+                width: double.infinity,
+                padding: const EdgeInsets.only(left: 18.0, right: 18.0, bottom: 10.0),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: MMColors.instance.primary, width: 1.0),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      icon,
+                      color: MMColors.instance.lightWhite,
+                      size: 28.0,
+                    ),
+                    const SizedBox(
+                      width: 8.0,
+                    ),
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ],
+                ),
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                restorationId: 'modCategory${category.id}ListView',
+                itemCount: mods.length,
+                physics: const NeverScrollableScrollPhysics(),
+                itemBuilder: (_, int index) {
+                  return ModListItem(mods[index], index.isEven);
+                },
+              ),
+            ],
+          ),
+        ),
+      ];
+    }
+
+    return [];
   }
 }

@@ -1,15 +1,29 @@
+import 'dart:io';
+
+import 'package:easy_localization/easy_localization.dart';
 import 'package:fast_cached_network_image/fast_cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 import 'src/app.dart';
 import 'src/screen/settings/settings_controller.dart';
 import 'src/screen/settings/settings_service.dart';
 
+const String emulatorBoxName = 'emulator';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  String imageCacheDirectory = '${(await getApplicationDocumentsDirectory()).path}image_cache';
+  await EasyLocalization.ensureInitialized();
+  String imageCacheDirectory = '${(await getApplicationSupportDirectory()).path}${Platform.pathSeparator}image_cache';
   await FastCachedImageConfig.init(subDir: imageCacheDirectory, clearCacheAfter: const Duration(days: 30));
+
+  // Local storage
+  await GetStorage.init();
+  if (kDebugMode) {
+    GetStorage().erase();
+  }
 
   // Set window settings
   await windowManager.ensureInitialized();
@@ -36,5 +50,11 @@ void main() async {
   // Run the app and pass in the SettingsController. The app listens to the
   // SettingsController for changes, then passes it further down to the
   // SettingsView.
-  runApp(App(settingsController: settingsController));
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('en', 'US')],
+      path: 'assets/translations',
+      child: App(settingsController: settingsController),
+    ),
+  );
 }

@@ -1,9 +1,13 @@
+import 'package:fast_cached_network_image/fast_cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:modmopet/src/entity/game.dart';
-import 'package:modmopet/src/screen/games/game_list_provider.dart';
-import 'package:modmopet/src/screen/mods/mod_list_provider.dart';
-import 'package:modmopet/src/screen/mods/mod_list_view.dart';
+import 'package:modmopet/src/entity/git_source.dart';
+import 'package:modmopet/src/provider/game_list_provider.dart';
+import 'package:modmopet/src/screen/games/games_emulator_view.dart';
+import 'package:modmopet/src/screen/mods/mods_view.dart';
+import 'package:modmopet/src/themes/color_schemes.g.dart';
+import 'package:modmopet/src/widgets/mm_loading_indicator.dart';
 
 /// Displays a list of the games installed at the emulator
 class GameListView extends HookConsumerWidget {
@@ -13,14 +17,31 @@ class GameListView extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final games = ref.watch(gameListProvider);
-    return Container(
-      child: games.when(
-        loading: () => const CircularProgressIndicator(),
-        error: (err, stack) => Text(err.toString()),
-        data: (games) {
-          return buildListView(games, ref);
-        },
-      ),
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          height: 150.0,
+          width: double.maxFinite,
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: MMColors.instance.primary, width: 3),
+            ),
+          ),
+          child: const GamesEmulatorView(),
+        ),
+        Expanded(
+          child: games.when(
+            loading: () => MMLoadingIndicator(),
+            error: (err, stack) => Text(err.toString()),
+            data: (games) {
+              return buildListView(games, ref);
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -38,28 +59,29 @@ class GameListView extends HookConsumerWidget {
           leading: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: const [
-              Icon(
-                Icons.color_lens,
-                size: 25.0,
-              ),
-              SizedBox(width: 8.0),
-              Icon(
-                Icons.circle,
-                color: Colors.white60,
-                size: 10.0,
+            children: [
+              FastCachedImage(
+                url: game.iconUrl,
+                cacheHeight: 50,
+                cacheWidth: 50,
               ),
             ],
           ),
           onTap: () {
             // Set game
-            ref.watch(gameProvider.notifier).state = game;
+            debugPrint('Set game to: ${game.id}');
+            ref.read(gameProvider.notifier).state = game;
+            ref.read(sourceProvider.notifier).state = game.sources.first;
             Navigator.restorablePushNamed(
               context,
-              ModListView.routeName,
+              ModsView.routeName,
             );
           },
-          subtitle: Text(game.version),
+          subtitle: Row(
+            children: [
+              Text('Version: ${game.version}'),
+            ],
+          ),
           trailing: const Text('Placeholder'),
         );
       },

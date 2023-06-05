@@ -1,17 +1,20 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:modmopet/src/entity/git_source.dart';
+part 'game.freezed.dart';
 
-class Game {
-  final String id;
-  final String title;
-  final String version;
-  final List<GitSource> sources;
-  final String? bannerUrl;
-
-  Game({
-    required this.id,
-    required this.title,
-    required this.version,
-    required this.sources,
-    this.bannerUrl,
-  });
+@freezed
+class Game with _$Game {
+  Game._();
+  factory Game({
+    required String id,
+    required String title,
+    required String version,
+    required List<GitSource> sources,
+    required String bannerUrl,
+    required String iconUrl,
+    required String publisher,
+  }) = _Game;
 }
+
+final gameProvider = StateProvider<Game?>((ref) => null);
