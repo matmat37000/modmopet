@@ -25,7 +25,7 @@ jobs:
       id: sem-version
       uses: shiipou/sem-version@beta
       with:
-        allow-failure: false
+        allow-failure: true
         prerelease-branches: '^(rc|beta|nightly|hotfix)$'
 
     outputs:
