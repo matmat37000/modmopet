@@ -27,6 +27,7 @@ jobs:
       with:
         allow-failure: false
         prerelease-branches: '^(rc|beta|nightly|hotfix)$'
+        release-branches: '^(main)$' 
 
     outputs:
       WILL_RELEASE: true # ${{ steps.sem-version.outputs.WILL_RELEASE }}
