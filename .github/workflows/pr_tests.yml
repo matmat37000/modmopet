@@ -1,0 +1,35 @@
+name: Tests
+on:
+    push:
+        branches:
+        - main
+        - rc
+        - beta
+        - nightly
+        - hotfix
+        - "*.x"
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Get-Version
+      id: get-version
+      uses: ./
+      with:
+        release-branches: '^(stable)$'
+        allow-failure: false
+
+    - name: Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "will_release: ${{ steps.get-version.outputs.will-release }}"
+        echo "version: v${{ steps.get-version.outputs.version }}"
+        echo "prerelease: ${{ steps.get-version.outputs.is-prerelease }}"
+        echo "changelog: \n\n=== ${{ steps.get-version.outputs.changelogs }} \n\n==="
