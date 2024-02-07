@@ -23,7 +23,7 @@ jobs:
 
     - name: Sem-Version
       id: sem-version
-      uses: shiipou/sem-version@beta
+      uses: shiipou/sem-version@stable
       with:
         allow-failure: false
         prerelease-branches: '^(rc|beta|nightly|hotfix)$'
