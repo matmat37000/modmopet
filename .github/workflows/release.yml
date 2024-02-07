@@ -27,7 +27,6 @@ jobs:
       with:
         allow-failure: false
         prerelease-branches: '^(rc|beta|nightly|hotfix)$'
-        release-branches: '^(main)$' 
 
     outputs:
       WILL_RELEASE: ${{ steps.sem-version.outputs.WILL_RELEASE }}
@@ -111,7 +110,6 @@ jobs:
       with:
         name: modmopet-${{ matrix.target }}
         path: modmopet-${{ matrix.target }}.*
-  
   release:
     name: Release
     needs: [ build, sem-version ]
