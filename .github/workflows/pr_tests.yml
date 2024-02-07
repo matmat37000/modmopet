@@ -1,13 +1,14 @@
 name: Tests
 on:
-    push:
-        branches:
-        - main
-        - rc
-        - beta
-        - nightly
-        - hotfix
-        - "*.x"
+    pull_request:
+    # push:
+        # branches:
+        # - main
+        # - rc
+        # - beta
+        # - nightly
+        # - hotfix
+        # - "*.x"
 
 jobs:
   test:

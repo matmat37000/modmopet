@@ -30,7 +30,7 @@ jobs:
         release-branches: '^(main)$' 
 
     outputs:
-      WILL_RELEASE: true # ${{ steps.sem-version.outputs.WILL_RELEASE }}
+      WILL_RELEASE: ${{ steps.sem-version.outputs.WILL_RELEASE }}
       IS_PRE_RELEASE: ${{ steps.sem-version.outputs.IS_PRE_RELEASE }}
       VERSION: ${{ steps.sem-version.outputs.VERSION }}
       CHANGELOG: ${{ steps.sem-version.outputs.CHANGELOG }}
