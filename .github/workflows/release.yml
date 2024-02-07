@@ -29,11 +29,11 @@ jobs:
         prerelease-branches: '^(rc|beta|nightly|hotfix)$'
         release-branches: '^(main)$' 
 
-    outputs:
-      WILL_RELEASE: ${{ steps.sem-version.outputs.WILL_RELEASE }}
-      IS_PRE_RELEASE: ${{ steps.sem-version.outputs.IS_PRE_RELEASE }}
-      VERSION: ${{ steps.sem-version.outputs.VERSION }}
-      CHANGELOG: ${{ steps.sem-version.outputs.CHANGELOG }}
+    # outputs:
+    #   WILL_RELEASE: true # ${{ steps.sem-version.outputs.WILL_RELEASE }}
+    #   IS_PRE_RELEASE: ${{ steps.sem-version.outputs.IS_PRE_RELEASE }}
+    #   VERSION: ${{ steps.sem-version.outputs.VERSION }}
+    #   CHANGELOG: ${{ steps.sem-version.outputs.CHANGELOG }}
 
   build:
     name: Build
